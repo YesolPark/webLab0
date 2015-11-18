@@ -2,84 +2,135 @@
 window.onload = function () {
     var stack = [];
     var displayVal = "0";
+    var flag=0;
+    var astack = []
     for (var i in $$('button')) {
         $$('button')[i].onclick = function () {
             var value = this.innerHTML;
-            if(value >= '0' && value <= '9'){
-                if(displayVal == "0"){
-                    displayVal = value - '0';
-                }
-                else{
-                    displayVal = displayVal.toString() + (value - '0');
-                }
-            }
-            else if(value == "AC"){
-                displayVal = "0";
-                document.getElementById("expression").innerHTML = "0";
-                stack = [];
-            }
-            else if(value == "."){
-                if(displayVal.indexOf('.') == -1){
-                    displayVal = displayVal.toString() + ".";
-                }
-            }
-            else{
-                var s = stack.pop();
-                var val = stack.pop();
-                
-                if(s == "*" || s == "/" || s == "^"){
-                    stack.push(parseFloat(highPriorityCalculator(s, val)));
-                }
-                else if(s == "!"){
-                    stack.push(factorial(val));
-                }
-                else{
-                    stack.push(val);
-                    stack.push(s);
+
+            if(/^[0-9]$/.test(value)){
+                if(displayVal=="0"){
+                    displayVal = value;
+                    document.getElementById('result').innerHTML = displayVal;
+                } 
+                else {
+                    displayVal += value;
+                    document.getElementById('result').innerHTML = displayVal;
                 }
 
-                if(document.getElementById("expression").innerHTML == "0"){
-                    document.getElementById("expression").innerHTML = displayVal.toString() + value;
+            } else if(value=="AC") {
+                displayVal="0";
+                stack = [];
+                astack = [];
+                document.getElementById('expression').innerHTML = "0";
+                document.getElementById('result').innerHTML = "0";
+                
+            } else if(value=='.'){
+                //displayVal += value;
+                var cnt = displayVal.split(".").length;
+                if(cnt==1){
+                    displayVal += value;
+                    document.getElementById('result').innerHTML = displayVal;
                 }
-                else{
-                    document.getElementById("expression").innerHTML = document.getElementById("expression").innerHTML + displayVal.toString() + value;
+
+            } else {
+            	
+            	if(document.getElementById('expression').innerHTML == "0"){
+            		document.getElementById('expression').innerHTML = displayVal + value;
+                    
+            	} else if(astack[astack.length-1]=="!"){
+                    
+                    if(value != "!") document.getElementById('expression').innerHTML += value;
+                    else if(value == "!") ;
+                    else document.getElementById('expression').innerHTML += (displayVal + value);
+            		
+            	} else {
+                    
+            		document.getElementById('expression').innerHTML += (displayVal + value);
+            	}
+            	
+            	
+            	
+            	if(stack[stack.length-1]=="*"||stack[stack.length-1]=="/"||stack[stack.length-1]=="^"){
+            		
+            		highPriorityCalculator(stack, displayVal);
+            		
+            	} else if(stack[stack.length-1]=="!") {
+            		
+            		displayVal = factorial(stack[stack.length-2]);
+            		
+            		stack.pop();
+            		stack.pop();
+            		stack.push(displayVal);
+            	} else {
+            		stack.push(parseFloat(displayVal));
+                    astack.push(parseFloat(displayVal));
+            	}
+            	
+            	if(astack[astack.length-1] =="!"){
+                    if(value =="+" || value == "-"){
+                        stack.push(value);
+                        astack.push(value);
+                    }
+                                        
+                } else {
+                    stack.push(value);
+                    astack.push(value);
                 }
-                stack.push(displayVal.toString());
-                stack.push(value);
-                displayVal = "0";
+                
+                displayVal="0";
+                document.getElementById('result').innerHTML = displayVal;
+            	
             }
-            document.getElementById('result').innerHTML = displayVal;
+            
+            if(value == "=") {
+                displayVal = calculator(stack);
+                document.getElementById('result').innerHTML = displayVal;
+                stack = [];
+                astack = [];
+                displayVal="0";
+            		
+            }
         };
+       
     }
+
+    
 };
+
+
 function factorial (x) {
-    if (x < 0) {
-        return -1;
-    }
-    else if (x == 0) {
+    if(x==1 || x==0){
         return 1;
-    }
-    else {
-        return (x * factorial(x - 1));
-    }
-}
-function highPriorityCalculator(s, val){
-    if(s == "*"){
-        return val * document.getElementById('result').innerHTML;
-        //alert(val*document.getElementById('result').innerHTML);
-    }
-    else if(s == "/"){
-        return val / document.getElementById('result').innerHTML;
-    }
-    else if(s == "^"){
-        return Math.pow(val, document.getElementById('result').innerHTML);
+    } else {
+        return factorial(x-1) * x;
     }
 }
+
+function highPriorityCalculator(s, val) {
+	var op = s.pop();
+	var pnum = s.pop();
+	
+	if(op == "*"){
+		s.push(pnum * val);
+	} else if(op=="/"){
+		s.push(pnum/val);
+	} else if(op=="^"){
+		s.push(Math.pow(pnum, val))
+	}	
+}
+
 function calculator(s) {
-    var result = 0;
-    var operator = "+";
-    for (var i=0; i< s.length; i++) {
-        
+    var result = s[0];
+    
+    if(s.length == 1){
+    	
+    } else {
+    	for (var i=1; i< s.length; i+=2) {
+	        if(s[i]=="+") result += s[i+1];
+	        else if(s[i]=="-") result -= s[i+1];
+        }
+    	
     }
     return result;
 }
